@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>✨ 럭키비키 가계부 ✨</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink:    #ff6eb4;
+      --pink2:   #ffb3d9;
+      --pink3:   #ffe4f0;
+      --lavender:#c9b3f5;
+      --lav2:    #ede5ff;
+      --mint:    #a8f0d8;
+      --mint2:   #e0faf2;
+      --yellow:  #ffe88a;
+      --yel2:    #fff9d6;
+      --coral:   #ffb3c1;
+      --white:   #ffffff;
+      --text:    #5a2d6f;
+      --text2:   #a67cbf;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+      background: linear-gradient(135deg, #ffe4f0 0%, #ede5ff 40%, #e0faf2 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* 배경 반짝이 파티클 */
+    .sparkles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+    .sp {
+      position: absolute;
+      font-size: 1.1rem;
+      animation: floatSp linear infinite;
+      opacity: 0;
+    }
+    @keyframes floatSp {
+      0%   { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+      10%  { opacity: 0.7; }
+      90%  { opacity: 0.7; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* 헤더 */
+    header {
+      position: relative; z-index: 1;
+      background: linear-gradient(135deg, #ff6eb4 0%, #c9b3f5 50%, #a8f0d8 100%);
+      padding: 2rem 2rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(255,110,180,0.35);
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 2px,
+        transparent 2px, transparent 12px
+      );
+    }
+    header h1 {
+      font-size: 2.2rem; font-weight: 900; color: white;
+      text-shadow: 0 2px 12px rgba(255,110,180,0.5), 0 0 40px rgba(255,255,255,0.3);
+      letter-spacing: -0.5px; position: relative;
+    }
+    header p {
+      font-size: 0.9rem; color: rgba(255,255,255,0.9);
+      margin-top: 6px; position: relative; font-weight: 500;
+    }
+    .header-deco {
+      position: absolute; font-size: 2rem; opacity: 0.35;
+      animation: spin 8s linear infinite;
+    }
+    .header-deco:nth-child(1) { top: 10px; left: 30px; }
+    .header-deco:nth-child(2) { top: 15px; right: 40px; animation-direction: reverse; }
+    .header-deco:nth-child(3) { bottom: 8px; left: 15%; font-size: 1.4rem; }
+    .header-deco:nth-child(4) { bottom: 8px; right: 15%; font-size: 1.4rem; animation-direction: reverse; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .container { max-width: 860px; margin: 0 auto; padding: 1.5rem 1rem 3rem; position: relative; z-index: 1; }
+
+    /* 월 네비게이션 */
+    .month-nav {
+      display: flex; align-items: center; justify-content: center;
+      gap: 1rem; margin-bottom: 1.25rem;
+    }
+    .month-nav button {
+      background: white;
+      border: 2px solid var(--pink2);
+      border-radius: 50px; padding: 7px 18px;
+      font-size: 1.1rem; cursor: pointer; color: var(--pink);
+      transition: all 0.2s; font-weight: 700;
+      box-shadow: 0 2px 10px rgba(255,110,180,0.15);
+    }
+    .month-nav button:hover {
+      background: var(--pink); color: white;
+      transform: scale(1.08);
+      box-shadow: 0 4px 16px rgba(255,110,180,0.4);
+    }
+    .month-nav h2 {
+      font-size: 1.3rem; font-weight: 900; color: var(--text);
+      min-width: 160px; text-align: center;
+      background: white; border-radius: 50px; padding: 8px 24px;
+      border: 2px solid var(--pink2);
+      box-shadow: 0 2px 12px rgba(255,110,180,0.12);
+    }
+
+    /* 요약 카드 */
+    .summary {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+      margin-bottom: 1.5rem;
+    }
+    .summary-card {
+      border-radius: 20px; padding: 1.2rem 1.25rem;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.07);
+      border: 2px solid transparent; position: relative; overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .summary-card:hover { transform: translateY(-3px); }
+    .summary-card::after {
+      content: '';
+      position: absolute; top: -20px; right: -20px;
+      width: 70px; height: 70px; border-radius: 50%;
+      opacity: 0.18;
+    }
+    .sc-income  { background: linear-gradient(135deg, #fff0f7, #ffe4f0); border-color: var(--pink2); }
+    .sc-income::after  { background: var(--pink); }
+    .sc-expense { background: linear-gradient(135deg, #f0eeff, #ede5ff); border-color: var(--lavender); }
+    .sc-expense::after { background: var(--lavender); }
+    .sc-balance { background: linear-gradient(135deg, #e8fff7, #e0faf2); border-color: var(--mint); }
+    .sc-balance::after { background: var(--mint); }
+
+    .summary-card .label {
+      font-size: 0.78rem; font-weight: 700; margin-bottom: 8px;
+      letter-spacing: 0.3px;
+    }
+    .sc-income .label  { color: var(--pink); }
+    .sc-expense .label { color: #9b7fe8; }
+    .sc-balance .label { color: #3cbf8f; }
+    .summary-card .value { font-size: 1.4rem; font-weight: 900; }
+    .income-val  { color: var(--pink); }
+    .expense-val { color: #9b7fe8; }
+    .balance-pos { color: #3cbf8f; }
+    .balance-neg { color: #e05050; }
+
+    /* 카드 공통 */
+    .card {
+      background: white; border-radius: 22px; padding: 1.4rem 1.5rem;
+      box-shadow: 0 4px 20px rgba(200,150,200,0.1);
+      border: 2px solid var(--pink3); margin-bottom: 1.25rem;
+      position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--pink), var(--lavender), var(--mint), var(--yellow), var(--pink));
+      background-size: 200% 100%;
+      animation: rainbowBar 4s linear infinite;
+    }
+    @keyframes rainbowBar {
+      0%   { background-position: 0% 0%; }
+      100% { background-position: 200% 0%; }
+    }
+    .card h3 {
+      font-size: 1rem; font-weight: 900; color: var(--text);
+      margin-bottom: 1rem; display: flex; align-items: center; gap: 7px;
+    }
+
+    /* 입력 폼 */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1.3fr;
+      gap: 10px; margin-bottom: 12px;
+    }
+    .form-grid input, .form-grid select {
+      border: 2px solid var(--pink3); border-radius: 12px;
+      padding: 9px 12px; font-size: 0.88rem; color: var(--text);
+      background: #fff8fc; width: 100%;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none; font-family: inherit;
+    }
+    .form-grid input::placeholder { color: var(--pink2); }
+    .form-grid input:focus, .form-grid select:focus {
+      border-color: var(--pink);
+      box-shadow: 0 0 0 4px rgba(255,110,180,0.12);
+      background: white;
+    }
+    .btn-row { display: flex; gap: 10px; }
+    .btn {
+      flex: 1; padding: 11px; border: none; border-radius: 14px;
+      font-size: 0.92rem; font-weight: 900; cursor: pointer;
+      transition: all 0.2s; font-family: inherit;
+      letter-spacing: 0.3px;
+    }
+    .btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+    .btn:active { transform: scale(0.96); }
+    .btn-income {
+      background: linear-gradient(135deg, #ff6eb4, #ff9ed6);
+      color: white; box-shadow: 0 4px 14px rgba(255,110,180,0.4);
+    }
+    .btn-expense {
+      background: linear-gradient(135deg, #c9b3f5, #a08ee0);
+      color: white; box-shadow: 0 4px 14px rgba(160,120,220,0.4);
+    }
+
+    /* 필터 */
+    .list-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem; flex-wrap: wrap; gap: 8px;
+    }
+    .filters { display: flex; gap: 6px; }
+    .filter-btn {
+      border: 2px solid var(--pink3); background: white; border-radius: 50px;
+      padding: 5px 16px; font-size: 0.82rem; cursor: pointer; color: var(--text2);
+      transition: all 0.2s; font-weight: 700; font-family: inherit;
+    }
+    .filter-btn.active {
+      background: linear-gradient(135deg, var(--pink), var(--lavender));
+      color: white; border-color: transparent;
+      box-shadow: 0 3px 12px rgba(255,110,180,0.35);
+    }
+    .filter-btn:not(.active):hover { border-color: var(--pink); color: var(--pink); }
+
+    /* 거래 목록 */
+    .tx-list { display: flex; flex-direction: column; gap: 8px; }
+    .tx-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 14px;
+      background: linear-gradient(135deg, #fff8fc, #f8f4ff);
+      border: 1.5px solid var(--pink3);
+      transition: all 0.2s;
+    }
+    .tx-item:hover {
+      transform: translateX(4px);
+      border-color: var(--pink2);
+      box-shadow: 0 3px 14px rgba(255,110,180,0.12);
+    }
+    .tx-icon {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.15rem; flex-shrink: 0;
+    }
+    .tx-icon.income  { background: var(--pink3); }
+    .tx-icon.expense { background: var(--lav2); }
+
+    .tx-info { flex: 1; min-width: 0; }
+    .tx-desc { font-size: 0.92rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tx-meta { font-size: 0.76rem; color: var(--text2); margin-top: 2px; }
+
+    .tx-amount { font-size: 0.95rem; font-weight: 900; white-space: nowrap; }
+    .tx-amount.income  { color: var(--pink); }
+    .tx-amount.expense { color: #9b7fe8; }
+
+    .tx-del {
+      background: none; border: none; cursor: pointer;
+      color: #e0c0d0; font-size: 1rem; padding: 5px 7px;
+      border-radius: 8px; transition: all 0.15s; flex-shrink: 0;
+    }
+    .tx-del:hover { color: var(--pink); background: var(--pink3); }
+
+    .empty {
+      text-align: center; padding: 2.5rem 1rem; color: var(--pink2); font-size: 0.9rem; font-weight: 700;
+    }
+    .empty .icon { font-size: 3rem; margin-bottom: 10px; display: block; animation: bounce 1.5s ease-in-out infinite; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+    /* 모바일 */
+    @media (max-width: 600px) {
+      .summary { grid-template-columns: 1fr 1fr; }
+      .summary-card:last-child { grid-column: span 2; }
+      .form-grid { grid-template-columns: 1fr 1fr; }
+      header h1 { font-size: 1.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 떠다니는 반짝이 배경 -->
+<div class="sparkles" id="sparklesBg"></div>
+
+<header>
+  <span class="header-deco">🌸</span>
+  <span class="header-deco">⭐</span>
+  <span class="header-deco">💫</span>
+  <span class="header-deco">🌟</span>
+  <h1>✨ 럭키비키 가계부 ✨</h1>
+  <p>💖 오늘도 럭키하게 돈 관리해봐요 🍀</p>
+</header>
+
+<div class="container">
+
+  <!-- 월 네비게이션 -->
+  <div class="month-nav">
+    <button onclick="changeMonth(-1)">&#8249;</button>
+    <h2 id="monthLabel">🌸</h2>
+    <button onclick="changeMonth(1)">&#8250;</button>
+  </div>
+
+  <!-- 요약 -->
+  <div class="summary">
+    <div class="summary-card sc-income">
+      <div class="label">💗 들어온 돈</div>
+      <div class="value income-val" id="totalIncome">₩0</div>
+    </div>
+    <div class="summary-card sc-expense">
+      <div class="label">💜 나간 돈</div>
+      <div class="value expense-val" id="totalExpense">₩0</div>
+    </div>
+    <div class="summary-card sc-balance">
+      <div class="label">🌿 남은 돈</div>
+      <div class="value" id="balance">₩0</div>
+    </div>
+  </div>
+
+  <!-- 입력 폼 -->
+  <div class="card">
+    <h3>🖊️ 내역 추가하기</h3>
+    <div class="form-grid">
+      <input type="text"   id="inp-desc"     placeholder="💬 내용 (예: 점심식사)" />
+      <input type="number" id="inp-amount"   placeholder="💰 금액" min="0" />
+      <input type="date"   id="inp-date" />
+      <select id="inp-category">
+        <option value="">🏷️ 카테고리</option>
+        <optgroup label="── 수입 ──">
+          <option value="급여">💼 급여</option>
+          <option value="부수입">💡 부수입</option>
+          <option value="용돈">🎁 용돈</option>
+          <option value="기타수입">✨ 기타수입</option>
+        </optgroup>
+        <optgroup label="── 지출 ──">
+          <option value="식비">🍚 식비</option>
+          <option value="카페/간식">☕ 카페/간식</option>
+          <option value="교통">🚌 교통</option>
+          <option value="주거/공과금">🏠 주거/공과금</option>
+          <option value="의류/미용">👗 의류/미용</option>
+          <option value="의료/건강">💊 의료/건강</option>
+          <option value="문화/여가">🎬 문화/여가</option>
+          <option value="통신">📱 통신</option>
+          <option value="교육">📚 교육</option>
+          <option value="기타지출">📦 기타지출</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-income"  onclick="addTx('income')">💗 수입 추가</button>
+      <button class="btn btn-expense" onclick="addTx('expense')">💜 지출 추가</button>
+    </div>
+  </div>
+
+  <!-- 거래 목록 -->
+  <div class="card">
+    <div class="list-header">
+      <h3>🌈 거래 내역</h3>
+      <div class="filters">
+        <button class="filter-btn active" onclick="setFilter('all',this)">전체</button>
+        <button class="filter-btn" onclick="setFilter('income',this)">수입</button>
+        <button class="filter-btn" onclick="setFilter('expense',this)">지출</button>
+      </div>
+    </div>
+    <div class="tx-list" id="txList"></div>
+  </div>
+
+</div>
+
+<script>
+  /* ── 배경 반짝이 생성 ── */
+  const SPARKS = ['✨','⭐','🌟','💫','🌸','💖','🎀','🌺','🦋','🍀','🌈','💕'];
+  const bg = document.getElementById('sparklesBg');
+  for (let i = 0; i < 22; i++) {
+    const s = document.createElement('div');
+    s.className = 'sp';
+    s.textContent = SPARKS[Math.floor(Math.random() * SPARKS.length)];
+    s.style.left     = Math.random() * 100 + 'vw';
+    s.style.fontSize = (0.7 + Math.random() * 1) + 'rem';
+    const dur = 8 + Math.random() * 14;
+    s.style.animationDuration = dur + 's';
+    s.style.animationDelay   = -(Math.random() * dur) + 's';
+    bg.appendChild(s);
+  }
+
+  /* ── 가계부 로직 ── */
+  const CAT_EMOJI = {
+    급여:'💼', 부수입:'💡', 용돈:'🎁', 기타수입:'✨',
+    식비:'🍚', '카페/간식':'☕', 교통:'🚌', '주거/공과금':'🏠',
+    '의류/미용':'👗', '의료/건강':'💊', '문화/여가':'🎬',
+    통신:'📱', 교육:'📚', 기타지출:'📦'
+  };
+
+  let txns = JSON.parse(localStorage.getItem('kakaebu_v1') || '[]');
+  let curFilter = 'all';
+  const now = new Date();
+  let curYear = now.getFullYear();
+  let curMonth = now.getMonth();
+
+  function save() { localStorage.setItem('kakaebu_v1', JSON.stringify(txns)); }
+  function fmt(n) { return '₩' + Math.round(n).toLocaleString('ko-KR'); }
+
+  function changeMonth(dir) {
+    curMonth += dir;
+    if (curMonth > 11) { curMonth = 0; curYear++; }
+    if (curMonth < 0)  { curMonth = 11; curYear--; }
+    render();
+  }
+
+  function setFilter(f, btn) {
+    curFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  function addTx(type) {
+    const desc   = document.getElementById('inp-desc').value.trim();
+    const amount = parseFloat(document.getElementById('inp-amount').value);
+    const date   = document.getElementById('inp-date').value;
+    const cat    = document.getElementById('inp-category').value;
+    if (!desc)              { alert('💬 내용을 입력해주세요!'); return; }
+    if (!amount || amount <= 0) { alert('💰 올바른 금액을 입력해주세요!'); return; }
+    if (!date)              { alert('📅 날짜를 선택해주세요!'); return; }
+    const d = new Date(date);
+    txns.unshift({ id: Date.now(), desc, amount, date, cat, type });
+    save();
+    curYear  = d.getFullYear();
+    curMonth = d.getMonth();
+    document.getElementById('inp-desc').value      = '';
+    document.getElementById('inp-amount').value    = '';
+    document.getElementById('inp-category').value  = '';
+    render();
+  }
+
+  function delTx(id) {
+    if (!confirm('🗑️ 이 내역을 삭제할까요?')) return;
+    txns = txns.filter(t => t.id !== id);
+    save(); render();
+  }
+
+  function render() {
+    document.getElementById('monthLabel').textContent = `🌸 ${curYear}년 ${curMonth + 1}월 🌸`;
+    const monthTxns = txns.filter(t => {
+      const d = new Date(t.date);
+      return d.getFullYear() === curYear && d.getMonth() === curMonth;
+    });
+    const income  = monthTxns.filter(t => t.type === 'income') .reduce((s, t) => s + t.amount, 0);
+    const expense = monthTxns.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const bal = income - expense;
+    document.getElementById('totalIncome').textContent  = fmt(income);
+    document.getElementById('totalExpense').textContent = fmt(expense);
+    const balEl = document.getElementById('balance');
+    balEl.textContent = fmt(bal);
+    balEl.className   = 'value ' + (bal < 0 ? 'balance-neg' : 'balance-pos');
+    const visible = curFilter === 'all'
+      ? monthTxns : monthTxns.filter(t => t.type === curFilter);
+    const list = document.getElementById('txList');
+    if (visible.length === 0) {
+      list.innerHTML = `<div class="empty"><span class="icon">🌸</span>아직 내역이 없어요!<br>럭키하게 첫 기록을 남겨봐요 ✨</div>`;
+      return;
+    }
+    list.innerHTML = visible.map(t => {
+      const emoji  = CAT_EMOJI[t.cat] || (t.type === 'income' ? '💰' : '💸');
+      const sign   = t.type === 'income' ? '+' : '-';
+      const d      = new Date(t.date);
+      const dateStr = `${d.getMonth()+1}/${d.getDate()}`;
+      const catStr  = t.cat ? ` · ${t.cat}` : '';
+      return `
+        <div class="tx-item">
+          <div class="tx-icon ${t.type}">${emoji}</div>
+          <div class="tx-info">
+            <div class="tx-desc">${escHtml(t.desc)}</div>
+            <div class="tx-meta">${dateStr}${catStr}</div>
+          </div>
+          <div class="tx-amount ${t.type}">${sign}${fmt(t.amount)}</div>
+          <button class="tx-del" onclick="delTx(${t.id})" title="삭제">✕</button>
+        </div>`;
+    }).join('');
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  document.getElementById('inp-date').valueAsDate = new Date();
+  render();
+</script>
+</body>
+</html>
