@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>✨ 럭키비키 가계부 ✨</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -387,6 +388,11 @@
     bg.appendChild(s);
   }
 
+  /* ── Supabase 연결 ── */
+  const SUPABASE_URL = 'https://mpbzineqwqosgiwpvarm.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_N523VrxSlbSAAYMcaaNQng_kUgLXxBJ';
+  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
   /* ── 가계부 로직 ── */
   const CAT_EMOJI = {
     급여:'💼', 부수입:'💡', 용돈:'🎁', 기타수입:'✨',
@@ -395,14 +401,29 @@
     통신:'📱', 교육:'📚', 기타지출:'📦'
   };
 
-  let txns = JSON.parse(localStorage.getItem('kakaebu_v1') || '[]');
+  let txns = [];
   let curFilter = 'all';
   const now = new Date();
   let curYear = now.getFullYear();
   let curMonth = now.getMonth();
 
-  function save() { localStorage.setItem('kakaebu_v1', JSON.stringify(txns)); }
   function fmt(n) { return '₩' + Math.round(n).toLocaleString('ko-KR'); }
+
+  /* DB row → 화면용 객체 매핑 */
+  function fromRow(r) {
+    return { id: r.id, desc: r.description, amount: Number(r.amount), date: r.date, cat: r.category || '', type: r.type };
+  }
+
+  async function loadTxns() {
+    const { data, error } = await db
+      .from('transactions')
+      .select('*')
+      .order('date', { ascending: false })
+      .order('id', { ascending: false });
+    if (error) { console.error(error); alert('😢 데이터를 불러오지 못했어요: ' + error.message); return; }
+    txns = (data || []).map(fromRow);
+    render();
+  }
 
   function changeMonth(dir) {
     curMonth += dir;
@@ -418,7 +439,7 @@
     render();
   }
 
-  function addTx(type) {
+  async function addTx(type) {
     const desc   = document.getElementById('inp-desc').value.trim();
     const amount = parseFloat(document.getElementById('inp-amount').value);
     const date   = document.getElementById('inp-date').value;
@@ -426,9 +447,16 @@
     if (!desc)              { alert('💬 내용을 입력해주세요!'); return; }
     if (!amount || amount <= 0) { alert('💰 올바른 금액을 입력해주세요!'); return; }
     if (!date)              { alert('📅 날짜를 선택해주세요!'); return; }
+
+    const { data, error } = await db
+      .from('transactions')
+      .insert({ description: desc, amount, date, category: cat || null, type })
+      .select()
+      .single();
+    if (error) { console.error(error); alert('😢 저장하지 못했어요: ' + error.message); return; }
+
+    txns.unshift(fromRow(data));
     const d = new Date(date);
-    txns.unshift({ id: Date.now(), desc, amount, date, cat, type });
-    save();
     curYear  = d.getFullYear();
     curMonth = d.getMonth();
     document.getElementById('inp-desc').value      = '';
@@ -437,10 +465,12 @@
     render();
   }
 
-  function delTx(id) {
+  async function delTx(id) {
     if (!confirm('🗑️ 이 내역을 삭제할까요?')) return;
+    const { error } = await db.from('transactions').delete().eq('id', id);
+    if (error) { console.error(error); alert('😢 삭제하지 못했어요: ' + error.message); return; }
     txns = txns.filter(t => t.id !== id);
-    save(); render();
+    render();
   }
 
   function render() {
@@ -489,6 +519,7 @@
 
   document.getElementById('inp-date').valueAsDate = new Date();
   render();
+  loadTxns();
 </script>
 </body>
 </html>
