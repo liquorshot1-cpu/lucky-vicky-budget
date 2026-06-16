@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import DeleteButton from "@/components/DeleteButton";
+import LikeButton from "@/components/LikeButton";
 
 function formatPrice(price: number) {
   if (!price) return "나눔 🎁";
@@ -36,6 +37,23 @@ export default async function ProductDetailPage({
   const nickname = isOwner
     ? ((user?.user_metadata?.nickname as string | undefined) ?? "농부")
     : "농부";
+
+  // 좋아요 수 + 현재 사용자 좋아요 여부
+  const { count: likeCount } = await supabase
+    .from("likes")
+    .select("*", { count: "exact", head: true })
+    .eq("product_id", id);
+
+  let userLiked = false;
+  if (user) {
+    const { data: userLike } = await supabase
+      .from("likes")
+      .select("id")
+      .eq("product_id", id)
+      .eq("user_id", user.id)
+      .single();
+    userLiked = !!userLike;
+  }
 
   return (
     <>
@@ -132,6 +150,19 @@ export default async function ProductDetailPage({
             ) : (
               <p className="text-soil-soft/60 text-sm mb-6">설명이 없어요.</p>
             )}
+
+            {/* 좋아요 */}
+            <div className="flex items-center gap-3 py-4 border-t border-bark-soft">
+              <LikeButton
+                productId={id}
+                initialLiked={userLiked}
+                initialCount={likeCount ?? 0}
+                isLoggedIn={!!user}
+              />
+              {!user && (
+                <p className="text-xs text-soil-soft/60">로그인하면 좋아요를 누를 수 있어요</p>
+              )}
+            </div>
 
             {/* 가격 + 버튼 영역 */}
             <div className="pt-4 border-t border-bark-soft">

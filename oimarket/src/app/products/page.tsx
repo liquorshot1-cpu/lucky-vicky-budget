@@ -51,6 +51,18 @@ export default async function ProductsPage({
   const { data: products } = await query;
   const list: Product[] = products ?? [];
 
+  // 좋아요 수 (상품 목록용)
+  const likeCountMap: Record<string, number> = {};
+  if (list.length > 0) {
+    const { data: likesData } = await supabase
+      .from("likes")
+      .select("product_id")
+      .in("product_id", list.map((p) => p.id));
+    for (const like of likesData ?? []) {
+      likeCountMap[like.product_id] = (likeCountMap[like.product_id] ?? 0) + 1;
+    }
+  }
+
   return (
     <>
       {/* 상단 바 */}
@@ -159,15 +171,28 @@ export default async function ProductsPage({
                         {p.title}
                       </p>
 
-                      {/* 가격 + 동네·시간 */}
+                      {/* 가격 + 동네·시간·좋아요 */}
                       <div className="flex items-end justify-between">
                         <span className="font-black text-cucumber-dark text-sm">
                           {formatPrice(p.price)}
                         </span>
-                        <span className="text-xs text-soil-soft/70">
+                        <div className="flex items-center gap-2 text-xs text-soil-soft/70">
                           {p.location ? `📍${p.location} · ` : ""}
                           {timeAgo(p.created_at)}
-                        </span>
+                          {likeCountMap[p.id] ? (
+                            <span className="flex items-center gap-0.5 text-red-400">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                className="w-3.5 h-3.5"
+                              >
+                                <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                              </svg>
+                              {likeCountMap[p.id]}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
                   </div>

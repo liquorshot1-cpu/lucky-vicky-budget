@@ -134,6 +134,41 @@ export async function updateProduct(id: string, formData: FormData) {
   redirect(`/products/${id}?updated=1`);
 }
 
+// ── 좋아요 토글 ──
+export async function toggleLike(
+  productId: string,
+): Promise<{ liked: boolean; count: number } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "not_logged_in" };
+
+  const { data: existing } = await supabase
+    .from("likes")
+    .select("id")
+    .eq("product_id", productId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (existing) {
+    await supabase.from("likes").delete().eq("id", existing.id);
+  } else {
+    await supabase.from("likes").insert({ product_id: productId, user_id: user.id });
+  }
+
+  revalidatePath(`/products/${productId}`);
+  revalidatePath("/products");
+
+  const { count } = await supabase
+    .from("likes")
+    .select("*", { count: "exact", head: true })
+    .eq("product_id", productId);
+
+  return { liked: !existing, count: count ?? 0 };
+}
+
 // ── 판매글 삭제 ──
 export async function deleteProduct(id: string) {
   const supabase = await createClient();
