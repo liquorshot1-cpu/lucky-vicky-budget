@@ -30,10 +30,9 @@ export default async function Home({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const nickname =
-    (user?.user_metadata?.nickname as string | undefined) ?? "농부";
-
   let myProducts: Product[] = [];
+  let myProfile: { nickname: string; bio: string | null; avatar_url: string | null } | null =
+    null;
   if (user) {
     const { data } = await supabase
       .from("products")
@@ -41,7 +40,19 @@ export default async function Home({
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     myProducts = data ?? [];
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("nickname, bio, avatar_url")
+      .eq("id", user.id)
+      .single();
+    myProfile = profile;
   }
+
+  const nickname =
+    myProfile?.nickname ??
+    (user?.user_metadata?.nickname as string | undefined) ??
+    "농부";
 
   return (
     <>
@@ -67,6 +78,12 @@ export default async function Home({
                   className="text-sm font-bold text-white bg-cucumber hover:bg-cucumber-dark px-3 py-1.5 rounded-lg transition-colors"
                 >
                   + 판매글 쓰기
+                </Link>
+                <Link
+                  href="/mypage"
+                  className="text-sm font-medium text-soil-soft hover:text-soil px-3 py-1.5 rounded-lg hover:bg-bark-soft/50 transition-colors"
+                >
+                  내 프로필
                 </Link>
                 <form action={signout}>
                   <button className="text-sm font-medium text-soil-soft hover:text-soil px-3 py-1.5 rounded-lg hover:bg-bark-soft/50 transition-colors">
@@ -105,11 +122,37 @@ export default async function Home({
             )}
 
             <section className="bg-paper rounded-3xl border border-bark-soft shadow-sm p-7 text-center mb-8">
-              <div className="text-5xl mb-3">🧑‍🌾🥬🍅</div>
+              <div className="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden border-2 border-bark-soft bg-leaf-soft flex items-center justify-center text-4xl">
+                {myProfile?.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={myProfile.avatar_url}
+                    alt={nickname}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  "🧑‍🌾"
+                )}
+              </div>
               <h1 className="text-2xl font-black text-soil">
                 <span className="text-cucumber-dark">{nickname}</span>님, 다시 오셨네요!
               </h1>
-              <p className="text-soil-soft mt-2 text-sm">로그인 계정: {user.email}</p>
+              {myProfile?.bio ? (
+                <p className="text-soil-soft mt-2 text-sm whitespace-pre-wrap">{myProfile.bio}</p>
+              ) : (
+                <p className="text-soil-soft mt-2 text-sm">
+                  아직 자기소개가 없어요.{" "}
+                  <Link href="/mypage" className="font-bold text-cucumber-dark hover:underline">
+                    프로필 채우기 →
+                  </Link>
+                </p>
+              )}
+              <Link
+                href="/mypage"
+                className="inline-block mt-3 text-sm font-bold text-cucumber-dark hover:underline"
+              >
+                프로필 수정하기
+              </Link>
             </section>
 
             {/* 내가 등록한 상품 */}

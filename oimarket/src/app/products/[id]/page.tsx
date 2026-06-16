@@ -35,9 +35,16 @@ export default async function ProductDetailPage({
   } = await supabase.auth.getUser();
   const isOwner = user?.id === product.user_id;
 
-  const nickname = isOwner
-    ? ((user?.user_metadata?.nickname as string | undefined) ?? "농부")
-    : "농부";
+  // 작성자(판매자) 공개 프로필 불러오기
+  const { data: authorProfile } = await supabase
+    .from("profiles")
+    .select("nickname, bio, avatar_url")
+    .eq("id", product.user_id)
+    .single();
+
+  const nickname = authorProfile?.nickname ?? "농부";
+  const authorBio = authorProfile?.bio ?? null;
+  const authorAvatar = authorProfile?.avatar_url ?? null;
 
   // 좋아요 수 + 현재 사용자 좋아요 여부
   const { count: likeCount } = await supabase
@@ -156,18 +163,47 @@ export default async function ProductDetailPage({
 
             <hr className="border-bark-soft mb-4" />
 
-            {/* 판매자 */}
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 rounded-full bg-bark-soft flex items-center justify-center text-lg">
-                🧑‍🌾
+            {/* 판매자 프로필 (누르면 그 사람 페이지로 이동) */}
+            <Link
+              href={`/users/${product.user_id}`}
+              className="flex items-start gap-3 mb-4 rounded-2xl -m-2 p-2 hover:bg-cream/60 transition-colors group"
+            >
+              <div className="w-11 h-11 rounded-full overflow-hidden bg-leaf-soft flex items-center justify-center text-lg shrink-0 border border-bark-soft">
+                {authorAvatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={authorAvatar}
+                    alt={nickname}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  "🧑‍🌾"
+                )}
               </div>
-              <div>
-                <p className="text-sm font-bold text-soil">{nickname}</p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-bold text-soil group-hover:text-cucumber-dark transition-colors">
+                    {nickname}
+                  </p>
+                  {isOwner && (
+                    <span className="text-[10px] font-bold text-cucumber-dark bg-leaf-soft rounded-full px-1.5 py-0.5">
+                      나
+                    </span>
+                  )}
+                  <span className="ml-auto text-xs text-soil-soft/50 group-hover:text-cucumber-dark transition-colors">
+                    글 모아보기 →
+                  </span>
+                </div>
                 <p className="text-xs text-soil-soft/60">
                   {product.location ? `📍 ${product.location}` : "동네 미설정"}
                 </p>
+                {authorBio && (
+                  <p className="text-xs text-soil-soft mt-1 whitespace-pre-wrap leading-relaxed">
+                    {authorBio}
+                  </p>
+                )}
               </div>
-            </div>
+            </Link>
 
             <hr className="border-bark-soft mb-4" />
 
