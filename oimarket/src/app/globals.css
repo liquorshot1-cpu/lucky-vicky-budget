@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* ──────────────────────────────────────────────
+   오이마켓 디자인 시스템 — 농장 / 농부 컨셉
+   흙(soil) · 잎(leaf) · 오이(cucumber) · 햇살(sun)
+   ────────────────────────────────────────────── */
+@theme {
+  /* 배경: 햇살 머금은 크림색 */
+  --color-cream: #faf6ec;
+  --color-paper: #ffffff;
+
+  /* 텍스트: 기름진 흙색 */
+  --color-soil: #3f3325;
+  --color-soil-soft: #6b5b45;
+
+  /* 오이 / 잎 그린 (브랜드 메인) */
+  --color-cucumber: #5a8a3a;
+  --color-cucumber-dark: #466e2c;
+  --color-leaf: #7cb342;
+  --color-leaf-soft: #eaf3dd;
+
+  /* 흙 / 나무 */
+  --color-bark: #8b6f47;
+  --color-bark-soft: #efe6d6;
+
+  /* 햇살 포인트 */
+  --color-sun: #f4b740;
+
+  --font-sans: var(--font-noto-kr), system-ui, sans-serif;
+}
+
+:root {
+  --background: var(--color-cream);
+  --foreground: var(--color-soil);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  /* 옅은 밭이랑 느낌의 점무늬 배경 */
+  background-image: radial-gradient(
+    var(--color-leaf-soft) 1.5px,
+    transparent 1.5px
+  );
+  background-size: 24px 24px;
+  min-height: 100vh;
+}
