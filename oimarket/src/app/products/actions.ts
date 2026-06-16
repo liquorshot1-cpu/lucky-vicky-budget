@@ -169,6 +169,131 @@ export async function toggleLike(
   return { liked: !existing, count: count ?? 0 };
 }
 
+// ── 댓글/대댓글 작성 ──
+export async function createComment(
+  productId: string,
+  parentId: string | null,
+  content: string,
+): Promise<{ ok: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "not_logged_in" };
+
+  const text = content.trim();
+  if (!text) return { error: "댓글 내용을 입력해 주세요." };
+  if (text.length > 1000) return { error: "댓글은 1000자까지 쓸 수 있어요." };
+
+  const nickname = (user.user_metadata?.nickname as string | undefined) ?? "농부";
+
+  const { error } = await supabase.from("comments").insert({
+    product_id: productId,
+    parent_id: parentId,
+    content: text,
+    author_nickname: nickname,
+    user_id: user.id,
+  });
+
+  if (error) return { error: "댓글 등록에 실패했어요: " + error.message };
+
+  revalidatePath(`/products/${productId}`);
+  revalidatePath("/products");
+  return { ok: true };
+}
+
+// ── 댓글/대댓글 수정 ──
+export async function updateComment(
+  commentId: string,
+  productId: string,
+  content: string,
+): Promise<{ ok: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "not_logged_in" };
+
+  const text = content.trim();
+  if (!text) return { error: "댓글 내용을 입력해 주세요." };
+  if (text.length > 1000) return { error: "댓글은 1000자까지 쓸 수 있어요." };
+
+  const { error } = await supabase
+    .from("comments")
+    .update({ content: text, edited_at: new Date().toISOString() })
+    .eq("id", commentId)
+    .eq("user_id", user.id);
+
+  if (error) return { error: "댓글 수정에 실패했어요: " + error.message };
+
+  revalidatePath(`/products/${productId}`);
+  return { ok: true };
+}
+
+// ── 댓글 좋아요 토글 ──
+export async function toggleCommentLike(
+  commentId: string,
+  productId: string,
+): Promise<{ liked: boolean; count: number } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "not_logged_in" };
+
+  const { data: existing } = await supabase
+    .from("comment_likes")
+    .select("id")
+    .eq("comment_id", commentId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (existing) {
+    await supabase.from("comment_likes").delete().eq("id", existing.id);
+  } else {
+    await supabase
+      .from("comment_likes")
+      .insert({ comment_id: commentId, user_id: user.id });
+  }
+
+  revalidatePath(`/products/${productId}`);
+
+  const { count } = await supabase
+    .from("comment_likes")
+    .select("*", { count: "exact", head: true })
+    .eq("comment_id", commentId);
+
+  return { liked: !existing, count: count ?? 0 };
+}
+
+// ── 댓글/대댓글 삭제 ──
+export async function deleteComment(
+  commentId: string,
+  productId: string,
+): Promise<{ ok: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "not_logged_in" };
+
+  const { error } = await supabase
+    .from("comments")
+    .delete()
+    .eq("id", commentId)
+    .eq("user_id", user.id);
+
+  if (error) return { error: "댓글 삭제에 실패했어요: " + error.message };
+
+  revalidatePath(`/products/${productId}`);
+  revalidatePath("/products");
+  return { ok: true };
+}
+
 // ── 판매글 삭제 ──
 export async function deleteProduct(id: string) {
   const supabase = await createClient();

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import DeleteButton from "@/components/DeleteButton";
 import LikeButton from "@/components/LikeButton";
+import CommentSection from "@/components/CommentSection";
 
 function formatPrice(price: number) {
   if (!price) return "나눔 🎁";
@@ -54,6 +55,34 @@ export default async function ProductDetailPage({
       .single();
     userLiked = !!userLike;
   }
+
+  // 댓글/대댓글 불러오기 (오래된 순)
+  const { data: rawComments } = await supabase
+    .from("comments")
+    .select("id, parent_id, author_nickname, content, created_at, edited_at, user_id")
+    .eq("product_id", id)
+    .order("created_at", { ascending: true });
+
+  // 댓글별 좋아요 수 + 현재 사용자가 누른 댓글 모으기
+  const commentIds = (rawComments ?? []).map((c) => c.id);
+  const commentLikeCount: Record<string, number> = {};
+  const myLikedComments = new Set<string>();
+  if (commentIds.length > 0) {
+    const { data: clikes } = await supabase
+      .from("comment_likes")
+      .select("comment_id, user_id")
+      .in("comment_id", commentIds);
+    for (const cl of clikes ?? []) {
+      commentLikeCount[cl.comment_id] = (commentLikeCount[cl.comment_id] ?? 0) + 1;
+      if (user && cl.user_id === user.id) myLikedComments.add(cl.comment_id);
+    }
+  }
+
+  const comments = (rawComments ?? []).map((c) => ({
+    ...c,
+    like_count: commentLikeCount[c.id] ?? 0,
+    liked_by_me: myLikedComments.has(c.id),
+  }));
 
   return (
     <>
@@ -191,6 +220,14 @@ export default async function ProductDetailPage({
             </div>
           </div>
         </div>
+
+        {/* 댓글 영역 */}
+        <CommentSection
+          productId={id}
+          comments={comments ?? []}
+          currentUserId={user?.id ?? null}
+          isLoggedIn={!!user}
+        />
       </main>
     </>
   );
