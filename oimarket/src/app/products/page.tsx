@@ -171,30 +171,38 @@ export default async function ProductsPage({
                         {p.title}
                       </p>
 
-                      {/* 가격 + 동네·시간·좋아요 */}
+                      {/* 가격 + 동네·시간 */}
                       <div className="flex items-end justify-between">
                         <span className="font-black text-cucumber-dark text-sm">
                           {formatPrice(p.price)}
                         </span>
-                        <div className="flex items-center gap-2 text-xs text-soil-soft/70">
+                        <span className="text-xs text-soil-soft/70">
                           {p.location ? `📍${p.location} · ` : ""}
                           {timeAgo(p.created_at)}
-                          {likeCountMap[p.id] ? (
-                            <span className="flex items-center gap-0.5 text-red-400">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="currentColor"
-                                className="w-3.5 h-3.5"
-                              >
-                                <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-                              </svg>
-                              {likeCountMap[p.id]}
-                            </span>
-                          ) : null}
-                        </div>
+                        </span>
                       </div>
                     </div>
+                  </div>
+
+                  {/* 좋아요 수 — 항상 표시 */}
+                  <div className="flex items-center gap-1 mt-3 pt-2.5 border-t border-bark-soft/60">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill={likeCountMap[p.id] ? "currentColor" : "none"}
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      className={`w-4 h-4 ${likeCountMap[p.id] ? "text-red-400" : "text-soil-soft/30"}`}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+                      />
+                    </svg>
+                    <span className={`text-xs font-medium ${likeCountMap[p.id] ? "text-red-400" : "text-soil-soft/40"}`}>
+                      {likeCountMap[p.id] ?? 0}
+                    </span>
                   </div>
                 </Link>
               </li>
